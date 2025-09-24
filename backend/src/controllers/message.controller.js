@@ -57,13 +57,20 @@ export const getMessages = async (req, res) => {
       { read: true }
     );
 
-    // Emit event to update unread count for the sender
+    // Emit event to update unread count for both sender and receiver
     const senderSocketId = getReceiverSocketId(userToChatId);
+    const receiverSocketId = getReceiverSocketId(myId);
     console.log(`Emitting updateUnreadCount to sender ${userToChatId}, socketId: ${senderSocketId}`);
+    console.log(`Emitting updateUnreadCount to receiver ${myId}, socketId: ${receiverSocketId}`);
     if (senderSocketId) {
       io.to(senderSocketId).emit("updateUnreadCount");
     } else {
       console.log(`No socket found for sender ${userToChatId}`);
+    }
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("updateUnreadCount");
+    } else {
+      console.log(`No socket found for receiver ${myId}`);
     }
 
     res.status(200).json(messages);
