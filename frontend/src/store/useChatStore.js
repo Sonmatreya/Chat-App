@@ -22,6 +22,8 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
+
+
   getMessages: async (userId) => {
     set({ isMessagesLoading: true });
     try {
@@ -64,11 +66,17 @@ export const useChatStore = create((set, get) => ({
         messages: [...get().messages, newMessage],
       });
     });
+
+    socket.on("updateUnreadCount", () => {
+      console.log("Received updateUnreadCount event, refreshing users");
+      get().getUsers();
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     socket.off("newMessage");
+    socket.off("updateUnreadCount");
   },
 
   setSelectedUser: (selectedUser) => set({ selectedUser }),

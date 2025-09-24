@@ -7,12 +7,14 @@ import { Users } from "lucide-react";
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
 
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, authUser } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
   useEffect(() => {
-    getUsers();
-  }, [getUsers]);
+    if (authUser) {
+      getUsers();
+    }
+  }, [getUsers, authUser]);
 
   const filteredUsers = showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
@@ -61,19 +63,32 @@ const Sidebar = () => {
               />
               {onlineUsers.includes(user._id) && (
                 <span
-                  className="absolute bottom-0 right-0 size-3 bg-green-500 
+                  className="absolute bottom-0 right-0 size-3 bg-green-500
                   rounded-full ring-2 ring-black"
                 />
+              )}
+              {/* Mobile notification badge */}
+              {user.unreadCount > 0 && (
+                <div className="lg:hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                  {user.unreadCount > 9 ? "9+" : user.unreadCount}
+                </div>
               )}
             </div>
 
             {/* User info - only visible on larger screens */}
-            <div className="hidden lg:block text-left min-w-0">
+            <div className="hidden lg:block text-left min-w-0 flex-1">
               <div className="font-medium truncate text-white">{user.fullName}</div>
               <div className="text-sm text-gray-400">
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
               </div>
             </div>
+
+            {/* Notification badge */}
+            {user.unreadCount > 0 && (
+              <div className="hidden lg:flex items-center justify-center min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full px-1.5">
+                {user.unreadCount > 99 ? "99+" : user.unreadCount}
+              </div>
+            )}
           </button>
         ))}
 

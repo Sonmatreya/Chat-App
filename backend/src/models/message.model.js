@@ -21,6 +21,10 @@ const messageSchema = new mongoose.Schema(
     pdf: {
       type: String,
     },
+    read: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

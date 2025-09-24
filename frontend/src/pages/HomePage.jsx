@@ -1,4 +1,5 @@
 import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
 import Sidebar from "../components/Sidebar";
 import NoChatSelected from "../components/NoChatSelected";
 import ChatContainer from "../components/ChatContainer";
@@ -6,6 +7,11 @@ import UserProfileSidebar from "../components/UserProfileSidebar";
 
 const HomePage = () => {
   const { messages, selectedUser } = useChatStore();
+  const { authUser } = useAuthStore();
+
+  if (!authUser) {
+    return <div>Please log in to access this page.</div>;
+  }
 
   const media = messages
     .filter((msg) => msg.image || msg.pdf)

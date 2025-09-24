@@ -6,9 +6,33 @@ import { getReceiverSocketId, io } from "../lib/socket.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
-    const filteredUsers = await User.find().select("-password");
+    const users = await User.find({ _id: { $ne: req.user._id } }).select("-password");
 
-    res.status(200).json(filteredUsers);
+    const usersWithUnreadCount = await Promise.all(
+      users.map(async (user) => {
+        const unreadCount = await Message.countDocuments({
+          senderId: user._id,
+          receiverId: req.user._id,
+          read: false,
+        });
+
+        return {
+          ...user.toObject(),
+          unreadCount,
+        };
+      })
+    );
+
+    // Emit event to update unread count for the current user
+    const currentUserSocketId = getReceiverSocketId(req.user._id);
+    console.log(`Emitting updateUnreadCount to current user ${req.user._id}, socketId: ${currentUserSocketId}`);
+    if (currentUserSocketId) {
+      io.to(currentUserSocketId).emit("updateUnreadCount");
+    } else {
+      console.log(`No socket found for current user ${req.user._id}`);
+    }
+
+    res.status(200).json(usersWithUnreadCount);
   } catch (error) {
     console.error("Error in getUsersForSidebar: ", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -26,6 +50,21 @@ export const getMessages = async (req, res) => {
         { senderId: userToChatId, receiverId: myId },
       ],
     });
+
+    // Mark messages as read
+    await Message.updateMany(
+      { senderId: userToChatId, receiverId: myId, read: false },
+      { read: true }
+    );
+
+    // Emit event to update unread count for the sender
+    const senderSocketId = getReceiverSocketId(userToChatId);
+    console.log(`Emitting updateUnreadCount to sender ${userToChatId}, socketId: ${senderSocketId}`);
+    if (senderSocketId) {
+      io.to(senderSocketId).emit("updateUnreadCount");
+    } else {
+      console.log(`No socket found for sender ${userToChatId}`);
+    }
 
     res.status(200).json(messages);
   } catch (error) {
@@ -106,6 +145,7 @@ export const sendMessage = async (req, res) => {
     console.log(`Sending newMessage event to receiverId: ${receiverId}, socketId: ${receiverSocketId}`);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
+      io.to(receiverSocketId).emit("updateUnreadCount");
     } else {
       console.log(`No socket found for receiverId: ${receiverId}`);
     }
