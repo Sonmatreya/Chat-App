@@ -1,8 +1,9 @@
- 💬 Real-Time Chat App
+# 💬 Real-Time Chat App
 
 A modern **real-time chat application** built with the **MERN stack** and **Socket.IO**, featuring authentication, private messaging, profile management, and a sleek responsive UI.
 
----
+## 🚀 Live Demo
+👉 https://chat-app-06fm.onrender.com
 
 ## ✨ Features
 - 🔐 **Secure Authentication** (Signup, Login with JWT)
